@@ -1,8 +1,5 @@
-// eslint-disable-next-line import/extensions
 import Api from './modules/api.js';
-// eslint-disable-next-line import/extensions
 import Card from './modules/card.js';
-// eslint-disable-next-line import/extensions
 import CardList from './modules/cardList.js';
 import { errors } from './modules/errors.js';
 import Owner from './modules/owner.js';
