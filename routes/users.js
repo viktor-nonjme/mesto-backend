@@ -7,8 +7,6 @@ users.get('/users', (req, res) => {
 });
 
 users.get('/users/:id', (req, res) => {
-  const {name, about, avatar, _id} = req.params.id;
-
   const userIsFind = usersData.find(user => user._id === req.params.id);
 
   if (userIsFind) res.send(userIsFind);
