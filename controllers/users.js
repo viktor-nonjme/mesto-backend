@@ -12,27 +12,29 @@ const getUsers = (req, res, next) => {
     });
 };
 
-const getUserById = (req, res, next) => {
+const getUserById = (req, res) => {
   return userModel
     .findById(req.params.id)
     .then((user) => {
-      res.json(user);
+      if(user !== null) {
+        res.json(user);
+      } else {
+        res.status(404).send({ message: 'Нет пользователя с таким id' });
+      }
     })
-    .catch((err) => {
-      next(err);
+    .catch(() => {
+      res.status(404).send({ message: 'Нет пользователя с таким id' });
     });
 };
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   return userModel
     .create({ name, about, avatar })
     .then((user) => {
       res.json(user);
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(() => res.status(400).send({ message: 'Ошибка при создании пользователя' }));
 };
 
 const updateUser = (req, res, next) => {

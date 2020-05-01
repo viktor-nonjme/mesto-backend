@@ -13,7 +13,7 @@ const getCards = (req, res, next) => {
     });
 };
 
-const createCard = (req, res, next) => {
+const createCard = (req, res) => {
   const { name, link, likes } = req.body;
   const userId = req.user._id;
   return cardMolel
@@ -21,9 +21,7 @@ const createCard = (req, res, next) => {
     .then((card) => {
       res.json(card);
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(() => res.status(400).send({ message: 'Ошибка при создании карточки' }));
 };
 
 const deleteCard = (req, res, next) => {

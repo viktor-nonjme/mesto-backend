@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -12,13 +13,10 @@ const cardSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator(link) {
-        return /(ftp:\/\/|http:\/\/|https:\/\/)(w{3}\.)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(\w+)(\.\w+)?(\.\w+)?(\.\w+))(:[1-9]\d{1,4})?(\/*\w*\d*#?)/.test(
-          link
-        );
+        return validator.isURL(link);
       },
-      message: (props) => `${props.value} is not a valid link!`,
     },
-    required: true
+    required: true,
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
