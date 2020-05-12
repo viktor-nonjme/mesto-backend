@@ -24,16 +24,34 @@ const createCard = (req, res) => {
     .catch(() => res.status(400).send({ message: 'Ошибка при создании карточки' }));
 };
 
-const deleteCard = (req, res, next) => {
-  cardMolel
-    .findByIdAndRemove(req.params.id)
-    .then((card) => {
-      res.json(card);
+const deleteCard = (req, res) => {
+  cardMolel.findById(req.params.id)
+    .orFail(() => new Error('Нет карточки с таким id'))
+    .then(card => {
+      if (card.owner._id.toString() !== req.user._id) {
+        return res
+          .status(401)
+          .send({ message: 'Не хватает прав' });
+      }
+      return cardMolel.findByIdAndDelete(req.params.id)
+        .then(cardById => {
+          res.send({ data: cardById });
+        })
+        .catch(err => res.status(404).send({ message: err.message }));
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(err => res.status(404).send({ message: err.message }));
 };
+
+// const deleteCard = (req, res, next) => {
+//   cardMolel
+//     .findByIdAndRemove(req.params.id)
+//     .then((card) => {
+//       res.json(card);
+//     })
+//     .catch((err) => {
+//       next(err);
+//     });
+// };
 
 const likeCard = (req, res, next) => {
   const cardId = req.params.id;
