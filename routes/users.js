@@ -1,18 +1,11 @@
 const users = require('express').Router();
 
-const usersData = require('../data/user.json');
+const userController = require('../controllers/users');
 
-users.get('/users', (req, res) => {
-  res.send(usersData);
-});
-
-users.get('/users/:id', (req, res) => {
-  const {name, about, avatar, _id} = req.params.id;
-
-  const userIsFind = usersData.find(user => user._id === req.params.id);
-
-  if (userIsFind) res.send(userIsFind);
-  else res.status(404).send({ message: 'Нет пользователя с таким id' });
-});
+users.get('/users', userController.getUsers);
+users.get('/users/:id', userController.getUserById);
+users.post('/users', userController.createUser);
+users.patch('/users/:userId', userController.updateUser);
+users.patch('/users/:userId/avatar', userController.updateAvatar);
 
 module.exports = users;
