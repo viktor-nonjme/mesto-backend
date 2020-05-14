@@ -30,7 +30,7 @@ const deleteCard = (req, res) => {
     .then(card => {
       if (card.owner._id.toString() !== req.user._id) {
         return res
-          .status(401)
+          .status(403)
           .send({ message: 'Не хватает прав' });
       }
       return cardMolel.findByIdAndDelete(req.params.id)
@@ -41,17 +41,6 @@ const deleteCard = (req, res) => {
     })
     .catch(err => res.status(404).send({ message: err.message }));
 };
-
-// const deleteCard = (req, res, next) => {
-//   cardMolel
-//     .findByIdAndRemove(req.params.id)
-//     .then((card) => {
-//       res.json(card);
-//     })
-//     .catch((err) => {
-//       next(err);
-//     });
-// };
 
 const likeCard = (req, res, next) => {
   const cardId = req.params.id;

@@ -8,7 +8,7 @@ const login = (req, res) => {
   userModel
     .findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'some-secret-key', {
+      const token = jwt.sign({ _id: user._id }, 'secret-key', {
         expiresIn: '7d',
       });
 
@@ -46,10 +46,8 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  const { email, password, name, about, avatar } = req.body;
-
   return bcrypt
-    .hash(password, 10)
+    .hash(req.body.password, 10)
     .then((hash) =>
       userModel.create({
         email: req.body.email,
