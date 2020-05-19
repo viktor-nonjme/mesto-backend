@@ -1,31 +1,31 @@
 // Подключение библиотек из node_modules
 const express = require('express');
-const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
 
 // Подключение файлов проекта
 const users = require('./routes/users');
 const cards = require('./routes/cards');
 const error = require('./routes/error');
+const userController = require('./controllers/users');
+const { authorization } = require('./middlewares/auth');
 
 // Инициализация переменных
 const app = express();
+app.use(helmet());
+app.use(cookieParser());
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '5eaac00c87cb7872df4d5360',
-  };
-
-  next();
-});
+app.post('/signin', userController.login);
+app.post('/signup', userController.createUser);
 
 // Подключение роутеров
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(authorization);
 app.use(users);
 app.use(cards);
 app.use(error);
