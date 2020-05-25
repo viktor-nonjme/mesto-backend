@@ -1,3 +1,4 @@
+require('dotenv').config();
 // Подключение библиотек из node_modules
 const express = require('express');
 const mongoose = require('mongoose');
@@ -26,6 +27,12 @@ app.use(bodyParser.json());
 
 // подключаем логгер запросов
 app.use(requestLogger);
+
+app.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Сервер сейчас упадёт');
+  }, 0);
+});
 
 app.post('/signin', celebrate({ body: loginSchema }), userController.login);
 app.post('/signup', userController.createUser);
