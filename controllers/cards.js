@@ -1,5 +1,8 @@
 /* eslint-disable prettier/prettier */
 const cardMolel = require('../models/card');
+const UnauthorizedError = require('../errors/unauthorized-error');
+const NotFoundError = require('../errors/not-found-err');
+const BadRequestError = require('../errors/bad-request-error');
 
 const getCards = (req, res, next) => {
   return cardMolel
@@ -13,7 +16,7 @@ const getCards = (req, res, next) => {
     });
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link, likes } = req.body;
   const userId = req.user._id;
   return cardMolel
@@ -21,25 +24,25 @@ const createCard = (req, res) => {
     .then((card) => {
       res.json(card);
     })
-    .catch(() => res.status(400).send({ message: 'Ошибка при создании карточки' }));
+    .catch(() => next(new BadRequestError('Ошибка при создании карточки')));
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   cardMolel.findById(req.params.id)
-    .orFail(() => new Error('Нет карточки с таким id'))
+    .orFail(() => {
+      throw new NotFoundError('Нет карточки с таким id');
+    })
     .then(card => {
       if (card.owner._id.toString() !== req.user._id) {
-        return res
-          .status(403)
-          .send({ message: 'Не хватает прав' });
+         throw new UnauthorizedError('Не хватает прав');
       }
       return cardMolel.findByIdAndDelete(req.params.id)
         .then(cardById => {
           res.send({ data: cardById });
         })
-        .catch(err => res.status(404).send({ message: err.message }));
+        .catch(next);
     })
-    .catch(err => res.status(404).send({ message: err.message }));
+    .catch(next);
 };
 
 const likeCard = (req, res, next) => {

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
+const { errors, celebrate } = require('celebrate');
 
 // Подключение файлов проекта
 const users = require('./routes/users');
@@ -11,6 +12,8 @@ const cards = require('./routes/cards');
 const error = require('./routes/error');
 const userController = require('./controllers/users');
 const { authorization } = require('./middlewares/auth');
+const { loginSchema } = require('./joi-shemas/index');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 // Инициализация переменных
 const app = express();
@@ -21,7 +24,10 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.post('/signin', userController.login);
+// подключаем логгер запросов
+app.use(requestLogger);
+
+app.post('/signin', celebrate({ body: loginSchema }), userController.login);
 app.post('/signup', userController.createUser);
 
 // Подключение роутеров
@@ -40,14 +46,23 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useCreateIndex: true,
   useFindAndModify: false,
   // eslint-disable-next-line prettier/prettier
-  useUnifiedTopology: false
+  useUnifiedTopology: true
 });
+
+// подключаем логгер ошибок
+app.use(errorLogger);
+
+// обработчик ошибок celebrate
+app.use(errors());
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  if (status === 500) {
-    console.error(err.stack || 500);
+  if (!err.statusCode) {
+    const { statusCode = 500, message } = err;
+
+    res.status(statusCode).send({
+      message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
+    });
   }
-  return res.status(status).send({ message: err.message });
+  return res.status(err.statusCode).send({ message: err.message });
 });

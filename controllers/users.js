@@ -1,22 +1,27 @@
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
+const { createToken } = require('../utils/token');
+const NotFoundError = require('../errors/not-found-err');
+const BadRequestError = require('../errors/bad-request-error');
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   userModel
     .findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'secret-key', {
-        expiresIn: '7d',
+      const token = createToken(user);
+
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        // eslint-disable-next-line prettier/prettier
+        sameSite: true
       });
 
-      res.send({ token });
+      res.status(200).send({ token });
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
+    .catch(next);
 };
 
 const getUsers = (req, res, next) => {
@@ -30,22 +35,19 @@ const getUsers = (req, res, next) => {
     });
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   return userModel
     .findById(req.params.id)
     .then((user) => {
-      if (user !== null) {
-        res.json(user);
-      } else {
-        res.status(404).send({ message: 'Нет пользователя с таким id' });
+      if (!user) {
+        throw new NotFoundError('Нет пользователя с таким id');
       }
+      res.send(user);
     })
-    .catch(() => {
-      res.status(404).send({ message: 'Нет пользователя с таким id' });
-    });
+    .catch(next);
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   return bcrypt
     .hash(req.body.password, 10)
     .then((hash) =>
@@ -66,9 +68,7 @@ const createUser = (req, res) => {
         avatar: user.avatar,
       });
     })
-    .catch(() =>
-      res.status(400).send({ message: 'Ошибка при создании пользователя' })
-    );
+    .catch(() => next(new BadRequestError('Ошибка при создании пользователя')));
 };
 
 const updateUser = (req, res, next) => {
@@ -119,5 +119,6 @@ module.exports = {
   createUser,
   getUserById,
   updateUser,
-  updateAvatar,
+  // eslint-disable-next-line prettier/prettier
+  updateAvatar
 };
