@@ -1,8 +1,15 @@
 /* eslint-disable prettier/prettier */
 const cardMolel = require('../models/card');
-const UnauthorizedError = require('../errors/unauthorized-error');
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-error');
+
+const verifyCardAndSend = (card, res) => {
+  if (!card) {
+    throw new NotFoundError('Нет карточки с таким id');
+  }
+
+  return res.send({ data: card });
+};
 
 const getCards = (req, res, next) => {
   return cardMolel
@@ -34,7 +41,7 @@ const deleteCard = (req, res, next) => {
     })
     .then(card => {
       if (card.owner._id.toString() !== req.user._id) {
-         throw new UnauthorizedError('Не хватает прав');
+        res.status(403).send('Не хватает прав');
       }
       return cardMolel.findByIdAndDelete(req.params.id)
         .then(cardById => {
@@ -50,12 +57,8 @@ const likeCard = (req, res, next) => {
   const user = req.user._id;
   cardMolel
     .findByIdAndUpdate(cardId, { $addToSet: { likes: user } }, { new: true })
-    .then((card) => {
-      res.json(card);
-    })
-    .catch((err) => {
-      next(err);
-    });
+    .then((card) => verifyCardAndSend(card, res))
+    .catch(next);
 };
 
 const dislikeCard = (req, res, next) => {
@@ -63,12 +66,8 @@ const dislikeCard = (req, res, next) => {
   const user = req.user._id;
   cardMolel
     .findByIdAndUpdate(cardId, { $pull: { likes: user } }, { new: true })
-    .then((card) => {
-      res.json(card);
-    })
-    .catch((err) => {
-      next(err);
-    });
+    .then((card) => verifyCardAndSend(card, res))
+    .catch(next);
 };
 
 module.exports = {

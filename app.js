@@ -13,20 +13,16 @@ const cards = require('./routes/cards');
 const error = require('./routes/error');
 const userController = require('./controllers/users');
 const { authorization } = require('./middlewares/auth');
-const { loginSchema } = require('./joi-shemas/index');
+const { loginSchema, registrationSchema } = require('./joi-shemas/index');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 // Инициализация переменных
 const app = express();
 app.use(helmet());
 app.use(cookieParser());
-const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-// подключаем логгер запросов
-app.use(requestLogger);
 
 app.get('/crash-test', () => {
   setTimeout(() => {
@@ -34,8 +30,15 @@ app.get('/crash-test', () => {
   }, 0);
 });
 
+// подключаем логгер запросов
+app.use(requestLogger);
+
 app.post('/signin', celebrate({ body: loginSchema }), userController.login);
-app.post('/signup', userController.createUser);
+app.post(
+  '/signup',
+  celebrate({ body: registrationSchema }),
+  userController.createUser
+);
 
 // Подключение роутеров
 app.use(authorization);
@@ -43,12 +46,17 @@ app.use(users);
 app.use(cards);
 app.use(error);
 
+const {
+  PORT = 3000,
+  MONGOO_URL = 'mongodb://localhost:27017/mestodb',
+} = process.env;
+
 // Запуск сервера на порту
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту: ${PORT}`);
 });
 
-mongoose.connect('mongodb://localhost:27017/mestodb', {
+mongoose.connect(MONGOO_URL, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,

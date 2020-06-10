@@ -6,6 +6,10 @@ const {
   // eslint-disable-next-line prettier/prettier
   userAvatarSchema
 } = require('../joi-shemas/index');
+const {
+  compareUserObjectIdAndCardId,
+  verifyUserObjectId,
+} = require('../middlewares/object-id');
 
 const userController = require('../controllers/users');
 
@@ -16,16 +20,20 @@ users.get(
   userController.getUserById
 );
 users.patch(
-  '/users/:userId',
+  '/users/:id',
   celebrate({ params: objectIdSchema, body: userInfoSchema }),
+  verifyUserObjectId,
+  compareUserObjectIdAndCardId,
   userController.updateUser
 );
 users.patch(
-  '/users/:userId/avatar',
+  '/users/:id/avatar',
   celebrate({
     params: objectIdSchema,
     body: userAvatarSchema,
   }),
+  verifyUserObjectId,
+  compareUserObjectIdAndCardId,
   userController.updateAvatar
 );
 
