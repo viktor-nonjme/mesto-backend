@@ -1,6 +1,7 @@
 # backend-mesto
 
 Публичный IP адресс: 
-84.201.181.216
+84.201.149.204
+
 Домен:
-http://mesto-test.ru
+https://mesto-test.ru
