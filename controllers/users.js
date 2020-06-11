@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const userModel = require('../models/user');
 const { createToken } = require('../utils/token');
 const NotFoundError = require('../errors/not-found-err');
-const BadRequestError = require('../errors/bad-request-error');
+const ConflictError = require('../errors/conflict-error');
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
@@ -68,7 +68,13 @@ const createUser = (req, res, next) => {
         avatar: user.avatar,
       });
     })
-    .catch(() => next(new BadRequestError('Ошибка при создании пользователя')));
+    .catch(() =>
+      next(
+        new ConflictError(
+          'Ошибка при создании пользователя или email уже используется'
+        )
+      )
+    );
 };
 
 const updateUser = (req, res, next) => {
